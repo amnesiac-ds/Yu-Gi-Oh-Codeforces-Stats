@@ -1,5 +1,23 @@
 from collections import defaultdict
 
+
+def normalize_codeforces_image_url(url: str | None) -> str:
+    if not url:
+        return 'https://codeforces.com/userpic.codeforces.org/no-title.jpg'
+
+    normalized = url.strip()
+    if normalized.startswith('//'):
+        normalized = f'https:{normalized}'
+
+    if normalized.startswith('http://userpic.codeforces.org/'):
+        normalized = normalized.replace('http://userpic.codeforces.org/', 'https://codeforces.com/userpic.codeforces.org/', 1)
+
+    if normalized.startswith('https://userpic.codeforces.org/'):
+        normalized = normalized.replace('https://userpic.codeforces.org/', 'https://codeforces.com/userpic.codeforces.org/', 1)
+
+    return normalized
+
+
 async def unique_solved_problems(response_2):
     problems = dict()
     for sub in response_2:

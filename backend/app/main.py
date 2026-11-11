@@ -9,6 +9,7 @@ from app.services import get_top10_rated
 from app.services import get_top10_contr
 from app.services import get_individual_info
 from app.services import scrap_info
+from app.utils import normalize_codeforces_image_url
 
 from app.database import create_database
 from app.database import get_user_info_db
@@ -118,7 +119,7 @@ async def codeforces_api_info():
         user.contributions = user_info.get('contribution')
         user.rank = user_info.get('rank').lower()
         user.max_rank = user_info.get('maxRank').lower()
-        user.avatar = user_info.get('titlePhoto')
+        user.avatar = normalize_codeforces_image_url(user_info.get('avatar') or user_info.get('titlePhoto'))
         user.match_card = await most_close_card(user)
 
         users_list.append(user)
@@ -141,11 +142,19 @@ async def user_info(handle : str = Query(...), update_type: str = 'rate'):
     if user is None:
         user: User = await get_individual_info(handle, http_client)
 
+    user.avatar = normalize_codeforces_image_url(user.avatar)
+    if user.badges:
+        user.badges = [normalize_codeforces_image_url(badge) for badge in user.badges]
+
     await scrap_info(user, http_client, update_type)
     if user.match_card is None:
         user.match_card = await most_close_card(user)
     
     user: User = await get_user_info_db(user.handle)
+    if user:
+        user.avatar = normalize_codeforces_image_url(user.avatar)
+        if user.badges:
+            user.badges = [normalize_codeforces_image_url(badge) for badge in user.badges]
 
     return user
 

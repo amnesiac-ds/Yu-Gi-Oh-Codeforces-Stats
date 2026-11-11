@@ -112,6 +112,27 @@ function Core(props: CoreProps) {
     );
 }
 
+function normalizeCodeforcesAvatar(url?: string): string {
+    if (!url) {
+        return 'https://codeforces.com/userpic.codeforces.org/no-title.jpg'
+    }
+
+    let normalized = url.trim()
+    if (normalized.startsWith('//')) {
+        normalized = `https:${normalized}`
+    }
+
+    if (normalized.startsWith('http://userpic.codeforces.org/')) {
+        normalized = normalized.replace('http://userpic.codeforces.org/', 'https://codeforces.com/userpic.codeforces.org/')
+    }
+
+    if (normalized.startsWith('https://userpic.codeforces.org/')) {
+        normalized = normalized.replace('https://userpic.codeforces.org/', 'https://codeforces.com/userpic.codeforces.org/')
+    }
+
+    return normalized
+}
+
 export default function Card(props: FetchProps) {
     let starArray: React.JSX.Element[] = []
     let badgeArray: React.JSX.Element[] = []
@@ -122,7 +143,7 @@ export default function Card(props: FetchProps) {
     let alter = useRef<HTMLImageElement>(null)
     let [handle, setHandle] = useState("")
     let [type, setType] = useState("Legendary Grandmaster")
-    let [photo, setPhoto] = useState("https://userpic.codeforces.org/422/title/50a270ed4a722867.jpg")
+    let [photo, setPhoto] = useState("https://codeforces.com/userpic.codeforces.org/no-title.jpg")
     let [sparkle, setSparkle] = useState(true)
     let [effectOpacity, setEffectOpacity] = useState(0.6)
     let [nameEffect, setNameEffect] = useState(true)
@@ -210,7 +231,7 @@ export default function Card(props: FetchProps) {
         setMaxRank(user.max_rank)
         setRating(user.rating)
         setMaxRating(user.max_rating)
-        setPhoto(user.avatar)
+        setPhoto(normalizeCodeforcesAvatar(user.avatar))
         setLang(user.most_used_lang)
         setType(config.type)
         setSparkle(config.sparkle)

@@ -12,6 +12,7 @@ from app.database import update_database
 from app.utils import unique_solved_problems
 from app.utils import get_problems_tags
 from app.utils import most_used_lang
+from app.utils import normalize_codeforces_image_url
 
 from app.card_matcher import most_close_card
 
@@ -20,6 +21,9 @@ async def update_cache_if_in_top(users: list[User], update_type: str = 'rate'):
         rated_data = await get_top10_rated(True)
     else:
         contr_data = await get_top10_contr(True)
+
+    for user in users:
+        user.avatar = normalize_codeforces_image_url(user.avatar)
 
     rated_updated = False
     contr_updated = False
@@ -63,11 +67,11 @@ async def get_individual_info(handle: str, http_client: AsyncSession = None) -> 
         user.contributions = response.get('contribution')
         user.rank = response.get('rank').lower()
         user.max_rank = response.get('maxRank').lower()
-        user.avatar = response.get('titlePhoto')
+        user.avatar = normalize_codeforces_image_url(response.get('avatar') or response.get('titlePhoto'))
     except AttributeError:
         user.handle = response.get('handle')
         user.contributions = response.get('contribution')
-        user.avatar = response.get('titlePhoto')
+        user.avatar = normalize_codeforces_image_url(response.get('avatar') or response.get('titlePhoto'))
         await process_null_rated(user)
 
     return user
@@ -104,7 +108,10 @@ async def get_top10_rated(cached : bool = False):
     if cached:
         with open('app/cache/top10_rated_cache.json', 'r') as file:
             data = json.load(file)
-            
+
+        for user in data:
+            user['avatar'] = normalize_codeforces_image_url(user.get('avatar'))
+
         return data
 
     url = 'https://codeforces.com'
@@ -126,6 +133,9 @@ async def get_top10_contr(cached : bool = False):
     if cached:
         with open('app/cache/top10_contributors_cache.json', 'r') as file:
             data = json.load(file)
+
+        for user in data:
+            user['avatar'] = normalize_codeforces_image_url(user.get('avatar'))
 
         return data
 
@@ -156,7 +166,7 @@ async def get_badges(handle : str):
 
     soup = BeautifulSoup(response.text, 'html.parser')
     soup = soup.select('div.badge')
-    badges = [i.img['src'] for i in soup]
+    badges = [normalize_codeforces_image_url(i.img['src']) for i in soup]
 
     return badges
 
